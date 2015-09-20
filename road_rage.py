@@ -14,7 +14,7 @@ class Driver:
     - Chance to Slow
     """
     def __init__(self, location, max_speed=120, accel=2, size=5, slow_chance=.1, min_space_mod=1):
-        self.max_speed = max_speed*1000//3600
+        self.max_speed = max_speed*1000/3600
         self.accel = accel
         self.size = size
         self.slow_chance = slow_chance
@@ -94,7 +94,7 @@ class Simulation:
             if random.random() > driver_1.slow_chance and driver_1.curr_speed <= self.road.speed_limit:
                 driver_1.curr_speed += driver_1.accel
             else:
-                driver_1.curr_speed += driver_1.accel
+                driver_1.curr_speed -= 2
 
     def tick(self):
         for x in range(len(self.road.vehicles) - 1, -1, -1):
