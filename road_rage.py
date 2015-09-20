@@ -81,25 +81,29 @@ class Simulation:
         else:
             self.road.vehicles[x].curr_speed -= 2
 
+    def check_too_close(self, x, y, new_loc):
+        #If driver would hit
+        if new_loc > ((self.road.vehicles[y].location-self.road.vehicles[y].size - 1)):
+            self.road.vehicles[x].curr_speed = 0
+        #If driver would be too close for comfort
+        elif new_loc > ((self.road.vehicles[y].location-self.road.vehicles[y].size - 1)-self.road.vehicles[x].curr_speed*self.road.vehicles[x].min_space_mod):
+            self.road.vehicles[x].curr_speed = self.road.vehicles[y].curr_speed
+        #Otherwise, roll for acceleration/deceleration
+        else:
+            self.roll_accel(x)
+
 
     def acceleration(self, x, y):
         new_loc = self.road.vehicles[x].location + self.road.vehicles[x].curr_speed
         if self.road.vehicles[x].location > self.road.vehicles[y].location:
             if new_loc > self.road.length:
+                self.check_too_close(x-1, x, new_loc)
                 del self.road.vehicles[x]
                 self.road.vehicles.insert(0, self.road.roll_car(0 - self.road.speed_limit*1000//3600))
             else:
                 self.roll_accel(x)
         else:
-            #If driver would hit
-            if new_loc > ((self.road.vehicles[y].location-self.road.vehicles[y].size - 1)):
-                self.road.vehicles[x].curr_speed = 0
-            #If driver would be too close for comfort
-            elif new_loc > ((self.road.vehicles[y].location-self.road.vehicles[y].size - 1)-self.road.vehicles[x].curr_speed*self.road.vehicles[x].min_space_mod):
-                self.road.vehicles[x].curr_speed = self.road.vehicles[y].curr_speed
-            #Otherwise, roll for acceleration/deceleration
-            else:
-                self.roll_accel(x)
+            self.check_too_close(x, y, new_loc)
 
     def tick(self):
         for x in range(len(self.road.vehicles) - 1, -1, -1):
