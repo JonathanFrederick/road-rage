@@ -74,24 +74,36 @@ class Simulation:
         self.speeds[0] = [x.curr_speed for x in self.road.vehicles]
         self.locations[0] = [x.location for x in self.road.vehicles]
 
-    def acceleration(self, driver_1, driver_2):
-        new_loc = driver_1.location + driver_1.curr_speed
-        #If driver would hit
-        if new_loc % self.road.length > ((driver_2.location-driver_2.size - 1)) % self.road.length:
-            driver_1.curr_speed = 0
-        #If driver would be too close for comfort
-        elif new_loc % self.road.length > ((driver_2.location-driver_2.size - 1)-driver_1.curr_speed*driver_1.min_space_mod) % self.road.length:
-            driver_1.curr_speed = driver_2.curr_speed
-        #Otherwise, roll for acceleration/deceleration
+
+    def roll_accel(self, x):
+        if random.random() > self.road.vehicles[x].slow_chance and self.road.vehicles[x].curr_speed <= self.road.speed_limit:
+            self.road.vehicles[x].curr_speed += self.road.vehicles[x].accel
         else:
-            if random.random() > driver_1.slow_chance and driver_1.curr_speed <= self.road.speed_limit:
-                driver_1.curr_speed += driver_1.accel
+            self.road.vehicles[x].curr_speed -= 2
+
+
+    def acceleration(self, x, y):
+        new_loc = self.road.vehicles[x].location + self.road.vehicles[x].curr_speed
+        if self.road.vehicles[x].location > self.road.vehicles[y].location:
+            if new_loc > self.road.length:
+                del self.road.vehicles[x]
+                self.road.vehicles.insert(0, self.road.roll_car(0 - self.road.speed_limit*1000//3600))
             else:
-                driver_1.curr_speed -= 2
+                self.roll_accel(x)
+        else:
+            #If driver would hit
+            if new_loc > ((self.road.vehicles[y].location-self.road.vehicles[y].size - 1)):
+                self.road.vehicles[x].curr_speed = 0
+            #If driver would be too close for comfort
+            elif new_loc > ((self.road.vehicles[y].location-self.road.vehicles[y].size - 1)-self.road.vehicles[x].curr_speed*self.road.vehicles[x].min_space_mod):
+                self.road.vehicles[x].curr_speed = self.road.vehicles[y].curr_speed
+            #Otherwise, roll for acceleration/deceleration
+            else:
+                self.roll_accel(x)
 
     def tick(self):
         for x in range(len(self.road.vehicles) - 1, -1, -1):
-            self.acceleration(self.road.vehicles[x], self.road.vehicles[(x+1) % len(self.road.vehicles)])
+            self.acceleration(x, (x+1) % len(self.road.vehicles))
             self.road.vehicles[x].motion()
 
     def run_sim(self):
@@ -101,3 +113,15 @@ class Simulation:
 #            self.locations[self.ticks+1] += [x.location for x in self.road.vehicles]
             self.ticks += 1
         return self.speeds#, self.locations
+
+
+class SimLoc(Simulation):
+    def __init__(self, speed_limit):
+        super().__init__(speed_limit)
+
+    def run_sim(self):
+        while self.ticks < self.max_ticks:
+            self.tick()
+            self.locations[self.ticks+1] += [x.location for x in self.road.vehicles]
+            self.ticks += 1
+        return self.locations
