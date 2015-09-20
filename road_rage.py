@@ -24,7 +24,6 @@ class Driver:
 
     def motion(self):
         self.location += self.curr_speed
-#        print("HI", end=" ")
 
     def __str__(self):
         return "Driver(accel={}, max_speed={}, size={}, slow_chance={}, min_space_mod={}, curr_speed={}, location={})".format(
@@ -77,20 +76,14 @@ class Simulation:
 
     def acceleration(self, driver_1, driver_2):
         new_loc = driver_1.location + driver_1.curr_speed
-#        print(driver_1)
-#        print(driver_2)
         #If driver would hit
-#        print(driver_1.location, ">>", new_loc, driver_2.location)
         if new_loc % self.road.length > ((driver_2.location-driver_2.size - 1)) % self.road.length:
-#            print("would hit")
             driver_1.curr_speed = 0
         #If driver would be too close for comfort
         elif new_loc % self.road.length > ((driver_2.location-driver_2.size - 1)-driver_1.curr_speed*driver_1.min_space_mod) % self.road.length:
-#            print("would get close")
             driver_1.curr_speed = driver_2.curr_speed
         #Otherwise, roll for acceleration/deceleration
         else:
-#            print("else roll")
             if random.random() > driver_1.slow_chance and driver_1.curr_speed <= self.road.speed_limit:
                 driver_1.curr_speed += driver_1.accel
             else:
@@ -105,6 +98,6 @@ class Simulation:
         while self.ticks < self.max_ticks:
             self.tick()
             self.speeds[self.ticks+1] += [x.curr_speed for x in self.road.vehicles]
-            self.locations[self.ticks+1] += [x.location for x in self.road.vehicles]
+#            self.locations[self.ticks+1] += [x.location for x in self.road.vehicles]
             self.ticks += 1
-        return self.speeds, self.locations
+        return self.speeds#, self.locations
